@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>JR Marqueurs</title>
+    <link rel="stylesheet" type="text/css" href="google.css">
+</head>
+
+<body>
+
+    <h1>MARQUEURS JEAN ROSTAND</h1>
+    <hr>
+    <div id="map" style="height: 500px;"></div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <script>
+        var map;
+        var markers = [];
+        var polylinePath = [];
+        var infoWindow;
+
+        var locationsInfo = {
+            "0": { name: "Lieu 1", description: "Ceci est le premier lieu." },
+            "1": { name: "Lieu 2", description: "Ceci est le deuxième lieu." }
+        };
+
+        function initMap() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 48.9593, lng: 2.5478 },
+                zoom: 15
+            });
+
+            infoWindow = new google.maps.InfoWindow();
+            loadDoc();
+        }
+
+        function loadDoc() {
+            $.ajax({
+                url: "markersJrostand.json",
+                method: "GET",
+                dataType: "json",
+                success: function (data) {
+                    for (var i = 0; i < data.length; i++) {
+                        (function(markerData) {
+                            var latLng = new google.maps.LatLng(markerData.lat, markerData.lng);
+                            var googleMarker = new google.maps.Marker({
+                                position: latLng,
+                                map: map
+                            });
+                            markers.push(googleMarker);
+                            polylinePath.push(latLng);
+
+                            const markerTitle = `${i + 1}. ${markerData.name}`;
+
+                            googleMarker.addListener("click", function () {
+                                infoWindow.close();
+                                infoWindow.setContent(markerTitle);
+                                infoWindow.open(map, googleMarker);
+                            });
+                        })(data[i]);
+                    }
+
+                    var polyline = new google.maps.Polyline({
+                        path: polylinePath,
+                        geodesic: true,
+                        strokeColor: '#FF0000',
+                        strokeOpacity: 1.0,
+                        strokeWeight: 2
+                    });
+
+                    polyline.setMap(map);
+                },
+                error: function (xhr, status, error) {
+                    console.error("Erreur lors du chargement des données JSON:", error);
+                }
+            });
+        }
+    </script>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA7Y32T_PJHZxYcK3BJYJFNwSl6cuvLXpo&callback=initMap" async defer></script>
+
+</body>
+
+</html>
